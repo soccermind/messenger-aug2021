@@ -93,7 +93,6 @@ const sendMessage = (data, body) => {
 
 // message format to send: {recipientId, text, conversationId}
 // conversationId will be set to null if its a brand new conversation
-// ticket #1: saveMessage() is async, need to wait (using async/await) before assinging it to data.
 export const postMessage = (body) => async (dispatch) => {
   try {
     const data = await saveMessage(body);
@@ -103,7 +102,6 @@ export const postMessage = (body) => async (dispatch) => {
     } else {
       dispatch(setNewMessage(data.message));
     }
-
     sendMessage(data, body);
   } catch (error) {
     console.error(error);

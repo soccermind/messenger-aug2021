@@ -8,20 +8,21 @@ export const addMessageToStore = (state, payload) => {
       messages: [message],
     };
     newConvo.latestMessageText = message.text;
+    newConvo.latestMessageCreatedAt = message.createdAt;
     return [newConvo, ...state];
   }
 
   return state.map((convo) => {
     if (convo.id === message.conversationId) {
-      // ticket #1: make a copy of convo to update state with new message
       const convoCopy = { ...convo };
       convoCopy.messages.push(message);
       convoCopy.latestMessageText = message.text;
+      convoCopy.latestMessageCreatedAt = message.createdAt;
       return convoCopy;
     } else {
       return convo;
     }
-  });
+  }).sort((a, b) => { return new Date(b.latestMessageCreatedAt) - new Date(a.latestMessageCreatedAt)});
 };
 
 export const addOnlineUserToStore = (state, id) => {
@@ -60,25 +61,25 @@ export const addSearchedUsersToStore = (state, users) => {
   users.forEach((user) => {
     // only create a fake convo if we don't already have a convo with this user
     if (!currentUsers[user.id]) {
-      let fakeConvo = { otherUser: user, messages: [] };
+      let fakeConvo = { otherUser: user, messages: [], latestMessageCreatedAt: "1970-01-01T08:00:00.000Z" };
       newState.push(fakeConvo);
     }
   });
 
-  return newState;
+  return newState.sort((a, b) => { return new Date(b.latestMessageCreatedAt) - new Date(a.latestMessageCreatedAt)});
 };
 
 export const addNewConvoToStore = (state, recipientId, message) => {
   return state.map((convo) => {
     if (convo.otherUser.id === recipientId) {
-      // ticket #1: make a copy of new convo to update state with new message
       const newConvoCopy = { ...convo };
       newConvoCopy.id = message.conversationId;
       newConvoCopy.messages.push(message);
       newConvoCopy.latestMessageText = message.text;
+      newConvoCopy.latestMessageCreatedAt = message.createdAt;
       return newConvoCopy;
     } else {
       return convo;
     }
-  });
+  }).sort((a, b) => { return new Date(b.latestMessageCreatedAt) - new Date(a.latestMessageCreatedAt)});
 };
