@@ -4,6 +4,8 @@ import { BadgeAvatar, ChatContent } from "../Sidebar";
 import { withStyles } from "@material-ui/core/styles";
 import { setActiveChat } from "../../store/activeConversation";
 import { connect } from "react-redux";
+import { markMessagesAsRead } from "../../store/utils/thunkCreators";
+import { clearUnreadMessages } from "../../store/conversations";
 
 const styles = {
   root: {
@@ -20,8 +22,10 @@ const styles = {
 };
 
 class Chat extends Component {
-  handleClick = async (conversation) => {
+  handleClick = async (conversation, currentUserId) => {
     await this.props.setActiveChat(conversation.otherUser.username);
+    await this.props.clearUnreadMessages(conversation.otherUser.username);
+    await markMessagesAsRead(currentUserId, conversation.otherUser.id);
   };
 
   render() {
@@ -29,7 +33,7 @@ class Chat extends Component {
     const otherUser = this.props.conversation.otherUser;
     return (
       <Box
-        onClick={() => this.handleClick(this.props.conversation)}
+        onClick={() => this.handleClick(this.props.conversation, this.props.user.id)}
         className={classes.root}
       >
         <BadgeAvatar
@@ -48,6 +52,9 @@ const mapDispatchToProps = (dispatch) => {
   return {
     setActiveChat: (id) => {
       dispatch(setActiveChat(id));
+    },
+    clearUnreadMessages: (activeConversation) => {
+      dispatch(clearUnreadMessages(activeConversation));
     },
   };
 };

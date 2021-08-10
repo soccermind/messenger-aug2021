@@ -83,3 +83,19 @@ export const addNewConvoToStore = (state, recipientId, message) => {
     }
   }).sort((a, b) => { return new Date(b.latestMessageCreatedAt) - new Date(a.latestMessageCreatedAt)});
 };
+
+export const clearUnreadMessagesInStore = (state, activeConversation) => {
+  return state.map((convo) => {
+    if (convo.otherUser.username === activeConversation) {
+      const convoCopy = { ...convo };
+      convoCopy.messages.forEach((msg, idx, array) => {
+        if (convoCopy.otherUser.id === msg.senderId) {
+          array[idx].unread = false;
+        }
+      });
+      return convoCopy;
+    } else {
+      return convo;
+    }
+  });
+};

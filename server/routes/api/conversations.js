@@ -80,4 +80,33 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.put("/active", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const { currentUserId, otherUserId } = req.body;
+    let conversation = await Conversation.findConversation(
+      currentUserId, otherUserId
+      );
+    if (conversation) {
+      const messages = await Message.findAll({
+        where: {
+          conversationId: conversation.id
+        },
+      });
+      for (const msg of messages) {
+        if (msg.senderId !== currentUserId) {
+          msg.update({
+            unread: false,
+          })
+        }
+      }
+    }
+    res.json({ conversationId: conversation.id, currentUserId, otherUserId });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
