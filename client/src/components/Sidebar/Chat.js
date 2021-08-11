@@ -25,7 +25,7 @@ class Chat extends Component {
   handleClick = async (conversation, currentUserId) => {
     await this.props.setActiveChat(conversation.otherUser.username);
     await this.props.clearUnreadMessages(conversation.otherUser.username);
-    await markMessagesAsRead(currentUserId, conversation.otherUser.id);
+    conversation.id && await markMessagesAsRead(currentUserId, conversation.otherUser.id, conversation.id, conversation.otherUser.username);
   };
 
   render() {

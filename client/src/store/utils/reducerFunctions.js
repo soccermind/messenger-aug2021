@@ -88,11 +88,7 @@ export const clearUnreadMessagesInStore = (state, activeConversation) => {
   return state.map((convo) => {
     if (convo.otherUser.username === activeConversation) {
       const convoCopy = { ...convo };
-      convoCopy.messages.forEach((msg, idx, array) => {
-        if (convoCopy.otherUser.id === msg.senderId) {
-          array[idx].unread = false;
-        }
-      });
+      convoCopy.unreadMessageCount = 0;
       return convoCopy;
     } else {
       return convo;

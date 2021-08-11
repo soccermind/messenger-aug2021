@@ -71,6 +71,15 @@ router.get("/", async (req, res, next) => {
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText = convoJSON.messages[convoJSON.messages.length - 1].text;
       convoJSON.latestMessageCreatedAt = convoJSON.messages[convoJSON.messages.length - 1].createdAt;
+
+      const readMessages = convoJSON.messages.filter((msg) =>
+      msg.senderId === userId && msg.read);
+      convoJSON.lastReadMessageText = readMessages.length > 0 
+        ? readMessages[readMessages.length - 1].text
+        : "";
+
+      convoJSON.unreadMessageCount = convoJSON.messages.filter((msg) =>
+        msg.senderId === convoJSON.otherUser.id && !msg.read).length;
       conversations[i] = convoJSON;
     }
     conversations.sort((a, b) => { return new Date(b.latestMessageCreatedAt) - new Date(a.latestMessageCreatedAt) })
@@ -80,30 +89,20 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.put("/active", async (req, res, next) => {
+router.put("/:conversationName", async (req, res, next) => {
   try {
-    if (!req.user) {
-      return res.sendStatus(401);
-    }
-    const { currentUserId, otherUserId } = req.body;
-    let conversation = await Conversation.findConversation(
-      currentUserId, otherUserId
-      );
-    if (conversation) {
-      const messages = await Message.findAll({
-        where: {
-          conversationId: conversation.id
-        },
-      });
-      for (const msg of messages) {
-        if (msg.senderId !== currentUserId) {
-          msg.update({
-            unread: false,
-          })
+    const { currentUserId, conversationId } = req.body;
+    await Message.update(
+        { read: true },
+        { where: {
+            conversationId: conversationId,
+            senderId: {
+              [Op.ne]: currentUserId
+            }
+          }
         }
-      }
-    }
-    res.json({ conversationId: conversation.id, currentUserId, otherUserId });
+      );
+    return res.sendStatus(200);
   } catch (error) {
     next(error);
   }

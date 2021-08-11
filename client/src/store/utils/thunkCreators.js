@@ -92,15 +92,17 @@ const sendMessage = (data, body) => {
 };
 
 const updateMessages = async (body) => {
-  const { data } = await axios.put("/api/conversations/active", body);
+  const { data } = await axios.put(`/api/conversations/${body.conversationName}`, body);
   return data;
 };
 
-export const markMessagesAsRead = async (currentUserId, otherUserId) => {
+export const markMessagesAsRead = async (currentUserId, otherUserId, conversationId, conversationName) => {
   try {
     const data = await updateMessages({
       currentUserId, 
-      otherUserId
+      otherUserId,
+      conversationId,
+      conversationName
     });
     return data;
   } catch (error) {
