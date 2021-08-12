@@ -22,10 +22,10 @@ const styles = {
 };
 
 class Chat extends Component {
-  handleClick = async (conversation, currentUserId) => {
+  handleClick = async (conversation) => {
     await this.props.setActiveChat(conversation.otherUser.username);
     await this.props.clearUnreadMessages(conversation.otherUser.username);
-    conversation.id && await markMessagesAsRead(currentUserId, conversation.otherUser.id, conversation.id, conversation.otherUser.username);
+    conversation.id && await markMessagesAsRead(conversation.id);
   };
 
   render() {
@@ -33,7 +33,7 @@ class Chat extends Component {
     const otherUser = this.props.conversation.otherUser;
     return (
       <Box
-        onClick={() => this.handleClick(this.props.conversation, this.props.user.id)}
+        onClick={() => this.handleClick(this.props.conversation)}
         className={classes.root}
       >
         <BadgeAvatar

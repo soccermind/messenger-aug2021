@@ -74,12 +74,13 @@ router.get("/", async (req, res, next) => {
 
       const readMessages = convoJSON.messages.filter((msg) =>
       msg.senderId === userId && msg.read);
-      convoJSON.lastReadMessageText = readMessages.length > 0 
-        ? readMessages[readMessages.length - 1].text
-        : "";
+      convoJSON.lastReadMessageId = readMessages.length > 0 
+        ? readMessages[readMessages.length - 1].id
+        : null;
 
-      convoJSON.unreadMessageCount = convoJSON.messages.filter((msg) =>
-        msg.senderId === convoJSON.otherUser.id && !msg.read).length;
+      convoJSON.unreadMessageCount = convoJSON.messages.reduce((count, currentMsg) => 
+        count + (currentMsg.senderId === convoJSON.otherUser.id && !currentMsg.read ? 1 : 0), 0);
+
       conversations[i] = convoJSON;
     }
     conversations.sort((a, b) => { return new Date(b.latestMessageCreatedAt) - new Date(a.latestMessageCreatedAt) })
@@ -89,19 +90,26 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.put("/:conversationName", async (req, res, next) => {
+router.put("/read", async (req, res, next) => {
   try {
-    const { currentUserId, conversationId } = req.body;
-    await Message.update(
-        { read: true },
-        { where: {
-            conversationId: conversationId,
-            senderId: {
-              [Op.ne]: currentUserId
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const userId = req.user.id;
+    const { conversationId } = req.body;
+    const conversation = await Conversation.findByPk(conversationId);
+    if (conversation.user1Id === userId || conversation.user2Id === userId) {
+      await Message.update(
+          { read: true },
+          { where: {
+              conversationId: conversation.id,
+              senderId: {
+                [Op.ne]: userId
+              }
             }
           }
-        }
-      );
+        );
+    }
     return res.sendStatus(200);
   } catch (error) {
     next(error);
