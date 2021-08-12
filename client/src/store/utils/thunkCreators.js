@@ -91,6 +91,22 @@ const sendMessage = (data, body) => {
   });
 };
 
+const updateMessages = async (body) => {
+  const { data } = await axios.put("/api/conversations/read", body);
+  return data;
+};
+
+export const markMessagesAsRead = async (conversationId) => {
+  try {
+    const data = await updateMessages({
+      conversationId,
+    });
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 // message format to send: {recipientId, text, conversationId}
 // conversationId will be set to null if its a brand new conversation
 export const postMessage = (body) => async (dispatch) => {

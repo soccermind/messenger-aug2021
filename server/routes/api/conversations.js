@@ -71,10 +71,46 @@ router.get("/", async (req, res, next) => {
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText = convoJSON.messages[convoJSON.messages.length - 1].text;
       convoJSON.latestMessageCreatedAt = convoJSON.messages[convoJSON.messages.length - 1].createdAt;
+
+      const readMessages = convoJSON.messages.filter((msg) =>
+      msg.senderId === userId && msg.read);
+      convoJSON.lastReadMessageId = readMessages.length > 0 
+        ? readMessages[readMessages.length - 1].id
+        : null;
+
+      convoJSON.unreadMessageCount = convoJSON.messages.reduce((count, currentMsg) => 
+        count + (currentMsg.senderId === convoJSON.otherUser.id && !currentMsg.read ? 1 : 0), 0);
+
       conversations[i] = convoJSON;
     }
     conversations.sort((a, b) => { return new Date(b.latestMessageCreatedAt) - new Date(a.latestMessageCreatedAt) })
     res.json(conversations);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put("/read", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const userId = req.user.id;
+    const { conversationId } = req.body;
+    const conversation = await Conversation.findByPk(conversationId);
+    if (conversation.user1Id === userId || conversation.user2Id === userId) {
+      await Message.update(
+          { read: true },
+          { where: {
+              conversationId: conversation.id,
+              senderId: {
+                [Op.ne]: userId
+              }
+            }
+          }
+        );
+    }
+    return res.sendStatus(200);
   } catch (error) {
     next(error);
   }
